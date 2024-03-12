@@ -1,8 +1,11 @@
 package com.soc.springboothashicorpvault;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.core.VaultTemplate;
@@ -12,49 +15,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootApplication
+@EnableConfigurationProperties(MyConfiguration.class)
 public class SpringbootHashicorpVaultApplication implements CommandLineRunner {
+	
+	Logger log = LoggerFactory.getLogger(SpringbootHashicorpVaultApplication.class);
+	
+	private final MyConfiguration myConfiguration;
+	
+	public SpringbootHashicorpVaultApplication(MyConfiguration myConfiguration)
+	{
+		this.myConfiguration=myConfiguration;
+	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbootHashicorpVaultApplication.class, args);
 	}
 
 	@Override
-	public void run(String... strings) throws Exception {
-		VaultEndpoint vaultEndpoint = new VaultEndpoint();
+	public void run(String... args) throws Exception {
+		log.info("Inside Main method");
+		log.info("Values from Vault Server");
+		log.info("Username " + myConfiguration.getUsername());
+		log.info("Password " + myConfiguration.getPassword());
 
-		vaultEndpoint.setHost("127.0.0.1");
-		vaultEndpoint.setPort(8200);
-		vaultEndpoint.setScheme("http");
 
-		// Authenticate
-		VaultTemplate vaultTemplate = new VaultTemplate(
-				vaultEndpoint,
-				new TokenAuthentication("123"));
-
-		// Write a secret
-		Map<String, String> data = new HashMap<>();
-		data.put("password", "Hashi123");
-
-		Versioned.Metadata createResponse = vaultTemplate
-				.opsForVersionedKeyValue("secret")
-				.put("my-secret-password", data);
-
-		System.out.println("Secret written successfully.");
-
-		// Read a secret
-		Versioned<Map<String, Object>> readResponse = vaultTemplate
-				.opsForVersionedKeyValue("secret")
-				.get("my-secret-password");
-
-		String password = "";
-		if (readResponse != null && readResponse.hasData()) {
-			password = (String) readResponse.getData().get("password");
-		}
-
-		if (!password.equals("Hashi123")) {
-			throw new Exception("Unexpected password");
-		}
-
-		System.out.println("Access granted!");
+		
 	}
+
+
 }
